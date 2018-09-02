@@ -14,6 +14,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.SystemUtils;
+
 public class App {
 
 	private static Set<Subject> subjectsToSchedule;
@@ -22,6 +24,7 @@ public class App {
 	private static Set<RoomAndTime> assignedRoomsAndTimes;
 
 	private static boolean debugEnabled = true;
+	private static String pathSeparator;
 
 	public static void main(String[] args) {
 		System.out.println("Args: " + args[0]);
@@ -30,6 +33,15 @@ public class App {
 			return;
 		}
 		System.out.println("Debug enabled: " + debugEnabled + "\n");
+		if(debugEnabled) {
+			if(SystemUtils.IS_OS_WINDOWS) {
+				pathSeparator = "\\";
+				System.out.println("Found Windows OS, setting path separator to " + pathSeparator);
+			} else {
+				pathSeparator = "/";
+				System.out.println("Found Linux OS, setting path separator to " + pathSeparator);
+			}
+		}
 		String inputFileName = args[0];
 		
 		if(inputFileName.trim().isEmpty()) {
@@ -74,7 +86,7 @@ public class App {
 		PrintWriter pw;
 		try {
 			String jarpath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-			String outputpath = Paths.get(jarpath).getParent().toString()+"/"+outputFileName;
+			String outputpath = Paths.get(jarpath).getParent().toString()+pathSeparator+outputFileName;
 			pw = new PrintWriter(new File(Paths.get(outputpath).toString()));
 			StringBuilder sb = new StringBuilder();
 			for(Subject subject : subjectsScheduled) {
@@ -247,7 +259,7 @@ public class App {
 			String[] data;
 
 			String jarpath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-			String inputpath = Paths.get(jarpath).getParent().toString()+"/"+inputFileName;
+			String inputpath = Paths.get(jarpath).getParent().toString()+ pathSeparator +inputFileName;
 			System.out.println(inputpath);
 			List<String> input = Files.readAllLines(Paths.get(inputpath),
 					StandardCharsets.ISO_8859_1);
