@@ -163,11 +163,13 @@ public class App {
 	}
 
 	private static Subject getSubjectToAssign() {
+		Subject maxPrioritySubject = (Subject) subjectsToAssign.toArray()[0];
 		for (Subject subject : subjectsToAssign) {
-			// TODO: add heuristic to get subject
-			return subject;
+			if(subject.getPriority() < maxPrioritySubject.getPriority()) {
+				maxPrioritySubject = subject;
+			}
 		}
-		return null;
+		return maxPrioritySubject;
 	}
 
 	private static void initialize() {
