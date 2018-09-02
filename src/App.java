@@ -24,8 +24,14 @@ public class App {
 	private static boolean debugEnabled = true;
 
 	public static void main(String[] args) {
+		System.out.println("Args: " + args[0]);
+		if(args.length == 0) {
+			System.out.println("Please specify atleast the input file name");
+			return;
+		}
 		System.out.println("Debug enabled: " + debugEnabled + "\n");
 		String inputFileName = args[0];
+		
 		if(inputFileName.trim().isEmpty()) {
 			System.out.println("Invalid input file name");
 			return;
@@ -67,7 +73,9 @@ public class App {
 	private static void writeResultToCsv(String outputFileName) {
 		PrintWriter pw;
 		try {
-			pw = new PrintWriter(new File(Paths.get(App.class.getResource(outputFileName).getPath()).toString()));
+			String jarpath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+			String outputpath = Paths.get(jarpath).getParent().toString()+"/"+outputFileName;
+			pw = new PrintWriter(new File(Paths.get(outputpath).toString()));
 			StringBuilder sb = new StringBuilder();
 			for(Subject subject : subjectsScheduled) {
 				sb.append(subject.getName());
@@ -246,8 +254,16 @@ public class App {
 		try {
 			String[] data;
 
-			List<String> input = Files.readAllLines(Paths.get(App.class.getResource(inputFileName).getPath()),
-					StandardCharsets.UTF_8);
+			String jarpath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+			String inputpath = Paths.get(jarpath).getParent().toString()+"/"+inputFileName;
+			System.out.println(inputpath);
+			List<String> input = Files.readAllLines(Paths.get(inputpath),
+					StandardCharsets.ISO_8859_1);
+			
+			System.out.println("Input file contents");
+			for(String line : input) {
+				System.out.println(line);
+			}
 
 			String roomsLine = input.get(input.size() - 1);
 			for (String room : roomsLine.split(",")) {
