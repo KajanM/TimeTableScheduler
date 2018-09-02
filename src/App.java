@@ -26,6 +26,10 @@ public class App {
 	public static void main(String[] args) {
 		System.out.println("Debug enabled: " + debugEnabled + "\n");
 		String inputFileName = args[0];
+		if(inputFileName.trim().isEmpty()) {
+			System.out.println("Invalid input file name");
+			return;
+		}
 		initialize();
 		parseCSVData(inputFileName);
 		assignPriority();
@@ -36,6 +40,10 @@ public class App {
 		long duration = (endTime - startTime)/1000;
 		System.out.println("Scheduling process took " + duration + " micro seconds");
 		String outputFileName = args[1];
+		if(outputFileName.trim().isEmpty()) {
+			System.out.println("Invalid input file name");
+			return;
+		}
 		writeResultToCsv(outputFileName);
 	}
 
