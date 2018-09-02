@@ -83,6 +83,7 @@ public class App {
 
 				if (debugEnabled) {
 					System.out.println("Successfully scheduled " + subjectToAssign);
+					displayScheduledSubjects();
 				}
 				break;
 			}
@@ -101,6 +102,13 @@ public class App {
 		}
 
 		assignTimeAndRoom();
+	}
+
+	private static void displayScheduledSubjects() {
+		for(Subject subject : subjectsAssigned) {
+			System.out.println(subject.getName() + " | " + subject.getRoomAndTime().getRoom() + " | " + subject.getRoomAndTime().getTime());
+		}
+		System.out.println();
 	}
 
 	private static void displaySubjectsToAssign() {
@@ -207,7 +215,7 @@ public class App {
 				System.out.println("parsing " + inputFileName + " finished");
 				displaySubjectsToAssign();
 				System.out.println("Available rooms\n==========\n" + rooms);
-				System.out.println("********************************");
+				System.out.println();
 			}
 
 		} catch (FileNotFoundException e) {
