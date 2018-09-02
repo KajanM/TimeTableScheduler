@@ -23,25 +23,22 @@ public class App {
 	private static Set<RoomAndTime> availableRoomsAndTimes;
 	private static Set<RoomAndTime> assignedRoomsAndTimes;
 
-	private static boolean debugEnabled = true;
+	private static boolean debugEnabled = false;
 	private static String pathSeparator;
 
 	public static void main(String[] args) {
 		try {
-			System.out.println("Args: " + args[0]);
 			if (args.length == 0) {
 				System.out.println("Please specify input, output files name");
 				return;
 			}
 			System.out.println("Debug enabled: " + debugEnabled + "\n");
-			if (debugEnabled) {
-				if (SystemUtils.IS_OS_WINDOWS) {
-					pathSeparator = "\\";
-					System.out.println("Found Windows OS, setting path separator to " + pathSeparator);
-				} else {
-					pathSeparator = "/";
-					System.out.println("Found Linux OS, setting path separator to " + pathSeparator);
-				}
+			if (SystemUtils.IS_OS_WINDOWS) {
+				pathSeparator = "\\";
+				System.out.println("Found Windows OS, setting path separator to " + pathSeparator);
+			} else {
+				pathSeparator = "/";
+				System.out.println("Found Linux OS, setting path separator to " + pathSeparator);
 			}
 			String inputFileName = args[0];
 
@@ -49,22 +46,31 @@ public class App {
 				System.out.println("Invalid input file name");
 				return;
 			}
+
 			initialize();
 			parseCSVData(inputFileName);
 			assignPriority();
-			long startTime = System.nanoTime();
+			long startTime = System.currentTimeMillis();
 			System.out.println("Recursive scheduling job started at " + new Date() + "\n");
 			assignTimeAndRoom();
-			long endTime = System.nanoTime();
-			long duration = (endTime - startTime) / 1000;
-			System.out.println("Scheduling process took " + duration + " micro seconds");
+			long endTime = System.currentTimeMillis();
+			long duration = (endTime - startTime);
+			System.out.println("Scheduling process took " + duration + " milli seconds");
 			String outputFileName = args[1];
 			if (outputFileName.trim().isEmpty()) {
-				System.out.println("Invalid input file name");
+				System.out.println("Invalid output file name");
 				return;
 			}
+			if (!debugEnabled) {
+				System.out.println("\nResults");
+				displayScheduledSubjects();
+			}
 			writeResultToCsv(outputFileName);
-			System.out.println("\nProcess completed, existing program.");
+			System.out.println("\nRunning test cases to verify all constraints are met...");
+
+			TestCases.noSubjectsAreScheduledToSameRoomAndTime(subjectsScheduled);
+			TestCases.noSubjectsAreScheduledAtCompulsorySubjectTime(subjectsScheduled);
+			TestCases.onlyApplicableTimeIsAssigned(subjectsScheduled);
 		} catch (Exception e) {
 			System.out.println("Could not solve...");
 			e.printStackTrace();
@@ -151,21 +157,32 @@ public class App {
 				continue;
 			}
 			if (subjectToAssign.isCompulsory()) {
+				if (debugEnabled) {
+					System.out.println("Available room and time: " + availableRoomsAndTimes);
+				}
 				effectiveAvailableRoomsAndTimes = new HashSet<>();
-				for (RoomAndTime scheduledSlot : assignedRoomsAndTimes) {
-					for (RoomAndTime rt : availableRoomsAndTimes) {
-						if (!rt.getTime().equals(scheduledSlot.getTime())) {
-							effectiveAvailableRoomsAndTimes.add(rt);
-						} else {
-							if (debugEnabled) {
-								System.out.println("Another subject is assigned at time " + rt.getTime());
-								System.out.println("Ignoring " + rt + " from available time slot " + " since "
-										+ subjectToAssign.getName() + " is compulsory");
-							}
+				Set<String> allocatedTimes = new HashSet<>();
+				for (RoomAndTime assignedRoomAndTime : assignedRoomsAndTimes) {
+					allocatedTimes.add(assignedRoomAndTime.getTime());
+				}
+				for (RoomAndTime availableRoomAndTime : availableRoomsAndTimes) {
+					if (!allocatedTimes.contains(availableRoomAndTime.getTime())) {
+						effectiveAvailableRoomsAndTimes.add(availableRoomAndTime);
+					} else {
+						if (debugEnabled) {
+							System.out.println("Another subject is assigned at time " + availableRoomAndTime.getTime());
+							System.out.println("Ignoring " + availableRoomAndTime + " from available time slot "
+									+ " since " + subjectToAssign.getName() + " is compulsory");
 						}
 					}
 				}
+				if (debugEnabled) {
+					System.out.println("Effective available room and time: " + effectiveAvailableRoomsAndTimes);
+				}
 				if (effectiveAvailableRoomsAndTimes.isEmpty()) {
+					continue;
+				}
+				if (!effectiveAvailableRoomsAndTimes.contains(roomAndTime)) {
 					continue;
 				}
 			} else {
@@ -205,17 +222,12 @@ public class App {
 
 	private static void displayScheduledSubjects() {
 		for (Subject subject : subjectsScheduled) {
-			System.out.println(subject.getName() + " | comuplsory: " + subject.isCompulsory() + " | "
+			System.out.println(subject.getName() + " | compulsory: " + subject.isCompulsory() + " | "
 					+ subject.getRoomAndTime().getRoom() + " | " + subject.getRoomAndTime().getTime());
 		}
-		System.out.println();
 	}
 
 	private static boolean forwardCheck(Subject subjectToAssign, RoomAndTime roomAndTime) {
-//		if (subjectsToSchedule.size() == 1) {
-//			System.out.println("Forward check passed " + subjectToAssign.getName() + " " + roomAndTime);
-//			return true;
-//		}
 		Set<RoomAndTime> effectiveAvailableRoomsAndTimes = new HashSet<>();
 
 		if (subjectToAssign.isCompulsory()) {
@@ -252,7 +264,9 @@ public class App {
 				return false;
 			}
 		}
-		System.out.println("Forward check passed " + subjectToAssign.getName() + " " + roomAndTime);
+		if (debugEnabled) {
+			System.out.println("Forward check passed " + subjectToAssign.getName() + " " + roomAndTime);
+		}
 		return true;
 	}
 
