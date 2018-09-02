@@ -26,7 +26,7 @@ public class App {
 	private static boolean debugEnabled = true;
 
 	public static void main(String[] args) {
-		System.out.println("Debug enabled: " + debugEnabled);
+		System.out.println("Debug enabled: " + debugEnabled + "\n");
 		inputFileName = args[0];
 		initialize();
 		assignPriority();
@@ -36,7 +36,7 @@ public class App {
 
 	private static void assignPriority() {
 		if(subjectsToAssign.isEmpty()) {
-			System.out.println("Initial subject list is empty.");
+			System.out.println("Initial subject list is empty. Existing");
 			return;
 		}
 		int priority;
@@ -86,7 +86,7 @@ public class App {
 				subjectsAssigned.add(subjectToAssign);
 
 				if (debugEnabled) {
-					System.out.println("Successfully assigned subject " + subjectToAssign);
+					System.out.println("Successfully scheduled " + subjectToAssign);
 				}
 				break;
 			}
@@ -112,6 +112,13 @@ public class App {
 		}
 
 		assignTimeAndRoom();
+	}
+
+	private static void displaySubjectsToAssign() {
+		System.out.println("Subjects to schedule\n==========");
+		for(Subject subject : subjectsToAssign) {
+			System.out.println(subject);
+		}
 	}
 
 	private static boolean forwardCheck(RoomAndTime roomAndTime) {
@@ -176,6 +183,7 @@ public class App {
 	}
 
 	private static void parseCSVData() {
+		System.out.println("Parsing started");
 		Set<String> rooms = new HashSet<>();
 
 		try {
@@ -208,9 +216,9 @@ public class App {
 			}
 
 			if (debugEnabled) {
-				System.out.println("parsing finished");
-				System.out.println("Subjects to assign: " + subjectsToAssign);
-				System.out.println("Rooms: " + rooms);
+				System.out.println("parsing " + inputFileName + " finished");
+				displaySubjectsToAssign();
+				System.out.println("Available rooms\n==========\n" + rooms);
 				System.out.println("********************************");
 			}
 
