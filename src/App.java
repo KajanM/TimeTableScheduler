@@ -26,10 +26,28 @@ public class App {
 	private static boolean debugEnabled = true;
 
 	public static void main(String[] args) {
+		System.out.println("Debug enabled: " + debugEnabled);
 		inputFileName = args[0];
 		initialize();
+		assignPriority();
 		assignTimeAndRoom();
 		outputResult();
+	}
+
+	private static void assignPriority() {
+		if(subjectsToAssign.isEmpty()) {
+			System.out.println("Initial subject list is empty.");
+			return;
+		}
+		int priority;
+		for(Subject subject : subjectsToAssign) {
+			priority = 0;
+			priority += subject.getApplicableSlots().size();
+			if(!subject.isCompulsory()) {
+				priority++;
+			}
+			subject.setPriority(priority);
+		}
 	}
 
 	private static void outputResult() {

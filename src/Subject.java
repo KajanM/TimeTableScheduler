@@ -7,6 +7,8 @@ public class Subject {
 	private final String name;
 	private final boolean compulsory;
 	private RoomAndTime roomAndTime;
+	
+	private int priority;
 
 	private final Set<RoomAndTime> applicableSlots;
 
@@ -44,11 +46,19 @@ public class Subject {
 	public void setRoomAndTime(RoomAndTime roomAndTime) {
 		this.roomAndTime = roomAndTime;
 	}
+	
+	public int getPriority() {
+		return priority;
+	}
+
+	public void setPriority(int priority) {
+		this.priority = priority;
+	}
 
 	@Override
 	public String toString() {
-		return "Subject [name=" + name + ", compulsory=" + compulsory + ", roomAndTime=" + roomAndTime
-				+ ", applicableSlots=" + applicableSlots + "]";
+		return "Subject [name=" + name + ", compulsory=" + compulsory + ", roomAndTime=" + roomAndTime + ", priority="
+				+ priority + ", applicableSlots=" + applicableSlots + "]";
 	}
 
 }
