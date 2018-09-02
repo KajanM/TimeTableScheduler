@@ -13,7 +13,6 @@ import java.util.Set;
 
 public class App {
 
-	private static String inputFileName;
 	private static Set<Subject> subjectsToAssign;
 	private static Set<Subject> subjectsAssigned;
 	private static Set<RoomAndTime> availableRoomsAndTimes;
@@ -23,8 +22,8 @@ public class App {
 
 	public static void main(String[] args) {
 		System.out.println("Debug enabled: " + debugEnabled + "\n");
-		inputFileName = args[0];
-		initialize();
+		String inputFileName = args[0];
+		initialize(inputFileName);
 		assignPriority();
 		assignTimeAndRoom();
 		outputResult();
@@ -39,7 +38,7 @@ public class App {
 		for(Subject subject : subjectsToAssign) {
 			priority = 0;
 			priority += subject.getApplicableSlots().size();
-			if(!subject.isCompulsory()) {
+			if(subject.isCompulsory()) {
 				priority++;
 			}
 			subject.setPriority(priority);
@@ -74,8 +73,17 @@ public class App {
 				}
 				continue;
 			}
-			if (forwardCheck(roomAndTime)) {
+			if (forwardCheck(subjectToAssign, roomAndTime)) {
 				availableRoomsAndTimes.remove(roomAndTime);
+				assignedRoomsAndTimes.add(roomAndTime);
+				if(subjectToAssign.isCompulsory()) {
+					for(RoomAndTime slot : availableRoomsAndTimes) {
+						if(slot.getTime().equals(roomAndTime.getTime())) {
+							availableRoomsAndTimes.remove(slot);
+							assignedRoomsAndTimes.add(slot);
+						}
+					}
+				}
 				assignedRoomsAndTimes.add(roomAndTime);
 				subjectToAssign.setRoomAndTime(roomAndTime);
 				subjectsToAssign.remove(subjectToAssign);
@@ -91,14 +99,6 @@ public class App {
 
 		if (!subjectToAssign.isScheduled()) {
 			backtrack();
-
-//			if (blackList.containsKey(failedAssignment)) {
-//				blackList.get(failedAssignment).add(failedAssignment.getRoomAndTime());
-//			} else {
-//				HashSet<RoomAndTime> set = new HashSet<>();
-//				set.add(failedAssignment.getRoomAndTime());
-//				blackList.put(failedAssignment, set);
-//			}
 		}
 
 		assignTimeAndRoom();
@@ -118,10 +118,23 @@ public class App {
 		}
 	}
 
-	private static boolean forwardCheck(RoomAndTime roomAndTime) {
+	private static boolean forwardCheck(Subject subjectToAssign, RoomAndTime roomAndTime) {
 		Set<RoomAndTime> effectiveAvailableRoomsAndTimes = new HashSet<>();
 		effectiveAvailableRoomsAndTimes.addAll(availableRoomsAndTimes);
-		for (Subject subject : subjectsToAssign) {
+		effectiveAvailableRoomsAndTimes.remove(roomAndTime);
+		
+		if(subjectToAssign.isCompulsory()) {
+			for(RoomAndTime slot : effectiveAvailableRoomsAndTimes) {
+				if(slot.getTime().equals(roomAndTime.getTime())) {
+					effectiveAvailableRoomsAndTimes.remove(slot);
+				}
+			}
+		}
+		
+		Set<Subject> subjectsToForwardCheck = new HashSet<>();
+		subjectsToForwardCheck.addAll(subjectsToAssign);
+		subjectsToForwardCheck.remove(subjectToAssign);
+		for (Subject subject : subjectsToForwardCheck) {
 			if (Collections.disjoint(subject.getApplicableSlots(), effectiveAvailableRoomsAndTimes)) {
 				return false;
 			}
@@ -140,7 +153,15 @@ public class App {
 				subjectsToAssign.add(subject);
 
 				availableRoomsAndTimes.add(subject.getRoomAndTime());
-				assignedRoomsAndTimes.add(subject.getRoomAndTime());
+				if(subject.isCompulsory()) {
+					for(RoomAndTime slot : assignedRoomsAndTimes) {
+						if(slot.getTime().equals(subject.getRoomAndTime().getTime())) {
+							assignedRoomsAndTimes.remove(slot);
+							availableRoomsAndTimes.add(slot);
+						}
+					}
+				}
+				assignedRoomsAndTimes.remove(subject.getRoomAndTime());
 
 				if (debugEnabled) {
 					System.out.println("Backtrack: " + subject);
@@ -152,12 +173,13 @@ public class App {
 					subjectsToAssign.add(subject);
 
 					availableRoomsAndTimes.add(subject.getRoomAndTime());
-					assignedRoomsAndTimes.add(subject.getRoomAndTime());
+					assignedRoomsAndTimes.remove(subject.getRoomAndTime());
 
 					if (debugEnabled) {
 						System.out.println("Backtrack: " + subject);
 					}
 				}
+				break;
 			}
 		}
 	}
@@ -172,15 +194,15 @@ public class App {
 		return maxPrioritySubject;
 	}
 
-	private static void initialize() {
+	private static void initialize(String inputFileName) {
 		subjectsToAssign = new LinkedHashSet<>();
 		availableRoomsAndTimes = new HashSet<>();
-		parseCSVData();
+		parseCSVData(inputFileName);
 		subjectsAssigned = new LinkedHashSet<>();
 		assignedRoomsAndTimes = new HashSet<>();
 	}
 
-	private static void parseCSVData() {
+	private static void parseCSVData(String inputFileName) {
 		System.out.println("Parsing started");
 		Set<String> rooms = new HashSet<>();
 
