@@ -136,6 +136,9 @@ public class App {
 		subjectsToForwardCheck.remove(subjectToAssign);
 		for (Subject subject : subjectsToForwardCheck) {
 			if (Collections.disjoint(subject.getApplicableSlots(), effectiveAvailableRoomsAndTimes)) {
+				if(debugEnabled) {
+					System.out.println("Can't assign " + roomAndTime + " to " + subjectToAssign.getName() + " due to forward check constraint");
+				}
 				return false;
 			}
 		}
