@@ -13,8 +13,8 @@ import java.util.Set;
 
 public class App {
 
-	private static Set<Subject> subjectsToAssign;
-	private static Set<Subject> subjectsAssigned;
+	private static Set<Subject> subjectsToSchedule;
+	private static Set<Subject> subjectsScheduled;
 	private static Set<RoomAndTime> availableRoomsAndTimes;
 	private static Set<RoomAndTime> assignedRoomsAndTimes;
 
@@ -23,19 +23,20 @@ public class App {
 	public static void main(String[] args) {
 		System.out.println("Debug enabled: " + debugEnabled + "\n");
 		String inputFileName = args[0];
-		initialize(inputFileName);
+		initialize();
+		parseCSVData(inputFileName);
 		assignPriority();
 		assignTimeAndRoom();
 		outputResult();
 	}
 
 	private static void assignPriority() {
-		if(subjectsToAssign.isEmpty()) {
+		if(subjectsToSchedule.isEmpty()) {
 			System.out.println("Initial subject list is empty. Existing");
 			return;
 		}
 		int priority;
-		for(Subject subject : subjectsToAssign) {
+		for(Subject subject : subjectsToSchedule) {
 			priority = 0;
 			priority += subject.getApplicableSlots().size();
 			if(subject.isCompulsory()) {
@@ -46,18 +47,18 @@ public class App {
 	}
 
 	private static void outputResult() {
-		if (!subjectsToAssign.isEmpty()) {
+		if (!subjectsToSchedule.isEmpty()) {
 			System.out.println("Invalid logic");
 			return;
 		}
 
-		for (Subject subject : subjectsAssigned) {
+		for (Subject subject : subjectsScheduled) {
 			System.out.println(subject);
 		}
 	}
 
 	private static void assignTimeAndRoom() {
-		if (subjectsToAssign.isEmpty()) {
+		if (subjectsToSchedule.isEmpty()) {
 			return;
 		}
 
@@ -86,8 +87,8 @@ public class App {
 				}
 				assignedRoomsAndTimes.add(roomAndTime);
 				subjectToAssign.setRoomAndTime(roomAndTime);
-				subjectsToAssign.remove(subjectToAssign);
-				subjectsAssigned.add(subjectToAssign);
+				subjectsToSchedule.remove(subjectToAssign);
+				subjectsScheduled.add(subjectToAssign);
 
 				if (debugEnabled) {
 					System.out.println("Successfully scheduled " + subjectToAssign);
@@ -105,7 +106,7 @@ public class App {
 	}
 
 	private static void displayScheduledSubjects() {
-		for(Subject subject : subjectsAssigned) {
+		for(Subject subject : subjectsScheduled) {
 			System.out.println(subject.getName() + " | " + subject.getRoomAndTime().getRoom() + " | " + subject.getRoomAndTime().getTime());
 		}
 		System.out.println();
@@ -113,7 +114,7 @@ public class App {
 
 	private static void displaySubjectsToAssign() {
 		System.out.println("Subjects to schedule\n==========");
-		for(Subject subject : subjectsToAssign) {
+		for(Subject subject : subjectsToSchedule) {
 			System.out.println(subject);
 		}
 	}
@@ -132,7 +133,7 @@ public class App {
 		}
 		
 		Set<Subject> subjectsToForwardCheck = new HashSet<>();
-		subjectsToForwardCheck.addAll(subjectsToAssign);
+		subjectsToForwardCheck.addAll(subjectsToSchedule);
 		subjectsToForwardCheck.remove(subjectToAssign);
 		for (Subject subject : subjectsToForwardCheck) {
 			if (Collections.disjoint(subject.getApplicableSlots(), effectiveAvailableRoomsAndTimes)) {
@@ -146,18 +147,18 @@ public class App {
 	}
 
 	private static void backtrack() {
-		if(subjectsAssigned.isEmpty()) {
+		if(subjectsScheduled.isEmpty()) {
 			System.out.println("Unable to find the solution, terminating the program");
 			System.exit(0);
 		}
-		Subject wrongAssignment = (Subject) subjectsAssigned.toArray()[subjectsAssigned.size() - 1];
-		Iterator<Subject> iterator = subjectsAssigned.iterator();
+		Subject wrongAssignment = (Subject) subjectsScheduled.toArray()[subjectsScheduled.size() - 1];
+		Iterator<Subject> iterator = subjectsScheduled.iterator();
 		Subject subject;
 		while (iterator.hasNext()) {
 			subject = iterator.next();
 			if (subject.equals(wrongAssignment)) {
-				subjectsAssigned.remove(subject);
-				subjectsToAssign.add(subject);
+				subjectsScheduled.remove(subject);
+				subjectsToSchedule.add(subject);
 
 				availableRoomsAndTimes.add(subject.getRoomAndTime());
 				if(subject.isCompulsory()) {
@@ -176,8 +177,8 @@ public class App {
 
 				while (iterator.hasNext()) {
 					subject = iterator.next();
-					subjectsAssigned.remove(subject);
-					subjectsToAssign.add(subject);
+					subjectsScheduled.remove(subject);
+					subjectsToSchedule.add(subject);
 
 					availableRoomsAndTimes.add(subject.getRoomAndTime());
 					assignedRoomsAndTimes.remove(subject.getRoomAndTime());
@@ -192,8 +193,8 @@ public class App {
 	}
 
 	private static Subject getSubjectToAssign() {
-		Subject maxPrioritySubject = (Subject) subjectsToAssign.toArray()[0];
-		for (Subject subject : subjectsToAssign) {
+		Subject maxPrioritySubject = (Subject) subjectsToSchedule.toArray()[0];
+		for (Subject subject : subjectsToSchedule) {
 			if(subject.getPriority() < maxPrioritySubject.getPriority()) {
 				maxPrioritySubject = subject;
 			}
@@ -201,16 +202,14 @@ public class App {
 		return maxPrioritySubject;
 	}
 
-	private static void initialize(String inputFileName) {
-		subjectsToAssign = new LinkedHashSet<>();
+	private static void initialize() {
+		subjectsToSchedule = new LinkedHashSet<>();
 		availableRoomsAndTimes = new HashSet<>();
-		parseCSVData(inputFileName);
-		subjectsAssigned = new LinkedHashSet<>();
+		subjectsScheduled = new LinkedHashSet<>();
 		assignedRoomsAndTimes = new HashSet<>();
 	}
 
 	private static void parseCSVData(String inputFileName) {
-		System.out.println("Parsing started");
 		Set<String> rooms = new HashSet<>();
 
 		try {
@@ -226,6 +225,13 @@ public class App {
 			input.remove(roomsLine);
 
 			for (String line : input) {
+				if(line.trim().startsWith("#")) {
+					//ignore comment
+					continue;
+				}
+				if(line.trim().isEmpty()) {
+					continue;
+				}
 				data = line.split(",");
 
 				Subject subject;
@@ -239,7 +245,7 @@ public class App {
 						availableRoomsAndTimes.add(roomAndTime);
 					}
 				}
-				subjectsToAssign.add(subject);
+				subjectsToSchedule.add(subject);
 			}
 
 			if (debugEnabled) {
