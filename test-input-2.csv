@@ -1,8 +1,8 @@
 # 6 subjects, 6 available slots
 
-S1, c, M1, M2, M3, T1
+S1, o, M1, M2, M3, T1
 S2, o, M1, M2, M3, T2
-S3, c, M1, M2, M3, T3
+S3, o, M1, M2, M3, T3
 S4, o, M3
 S5, c, M2
 S6, o, M1

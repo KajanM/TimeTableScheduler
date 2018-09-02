@@ -27,56 +27,76 @@ public class App {
 	private static String pathSeparator;
 
 	public static void main(String[] args) {
-		System.out.println("Args: " + args[0]);
-		if(args.length == 0) {
-			System.out.println("Please specify atleast the input file name");
-			return;
-		}
-		System.out.println("Debug enabled: " + debugEnabled + "\n");
-		if(debugEnabled) {
-			if(SystemUtils.IS_OS_WINDOWS) {
-				pathSeparator = "\\";
-				System.out.println("Found Windows OS, setting path separator to " + pathSeparator);
-			} else {
-				pathSeparator = "/";
-				System.out.println("Found Linux OS, setting path separator to " + pathSeparator);
+		try {
+			System.out.println("Args: " + args[0]);
+			if (args.length == 0) {
+				System.out.println("Please specify input, output files name");
+				return;
 			}
+			System.out.println("Debug enabled: " + debugEnabled + "\n");
+			if (debugEnabled) {
+				if (SystemUtils.IS_OS_WINDOWS) {
+					pathSeparator = "\\";
+					System.out.println("Found Windows OS, setting path separator to " + pathSeparator);
+				} else {
+					pathSeparator = "/";
+					System.out.println("Found Linux OS, setting path separator to " + pathSeparator);
+				}
+			}
+			String inputFileName = args[0];
+
+			if (inputFileName.trim().isEmpty()) {
+				System.out.println("Invalid input file name");
+				return;
+			}
+			initialize();
+			parseCSVData(inputFileName);
+			assignPriority();
+			long startTime = System.nanoTime();
+			System.out.println("Recursive scheduling job started at " + new Date() + "\n");
+			assignTimeAndRoom();
+			long endTime = System.nanoTime();
+			long duration = (endTime - startTime) / 1000;
+			System.out.println("Scheduling process took " + duration + " micro seconds");
+			String outputFileName = args[1];
+			if (outputFileName.trim().isEmpty()) {
+				System.out.println("Invalid input file name");
+				return;
+			}
+			writeResultToCsv(outputFileName);
+			System.out.println("\nProcess completed, existing program.");
+		} catch (Exception e) {
+			System.out.println("Could not solve...");
+			e.printStackTrace();
+			System.out.println("Remaining subjects to solve ");
+			if (debugEnabled) {
+				for (Subject subject : subjectsToSchedule) {
+					System.out.print(subject.getName() + " ");
+					System.out.print(subject.isCompulsory() + " ");
+					for (RoomAndTime applicableSlot : subject.getApplicableSlots()) {
+						System.out.print(applicableSlot.getTime() + "@" + applicableSlot.getRoom() + " ");
+					}
+					System.out.println();
+				}
+			}
+			System.out.println("Please ensure the problem is solvable");
+			System.out.println(
+					"If solvable, please consider filing an issue at https://github.com/KajanM/TimeTableScheduler");
 		}
-		String inputFileName = args[0];
-		
-		if(inputFileName.trim().isEmpty()) {
-			System.out.println("Invalid input file name");
-			return;
-		}
-		initialize();
-		parseCSVData(inputFileName);
-		assignPriority();
-		long startTime = System.nanoTime();
-		System.out.println("Recursive scheduling job started at " + new Date() + "\n");
-		assignTimeAndRoom();
-		long endTime = System.nanoTime();
-		long duration = (endTime - startTime)/1000;
-		System.out.println("Scheduling process took " + duration + " micro seconds");
-		String outputFileName = args[1];
-		if(outputFileName.trim().isEmpty()) {
-			System.out.println("Invalid input file name");
-			return;
-		}
-		writeResultToCsv(outputFileName);
-		System.out.println("\nProcess completed, existing program.");
 	}
 
 	private static void assignPriority() {
-		if(subjectsToSchedule.isEmpty()) {
+		if (subjectsToSchedule.isEmpty()) {
 			System.out.println("Initial subject list is empty. Existing");
 			return;
 		}
-		System.out.println("Assigning priority to subjects based on `Minimum Remaining Value` and `Degree` heuristics.\n");
+		System.out.println(
+				"Assigning priority to subjects based on `Minimum Remaining Value` and `Degree` heuristics.\n");
 		int priority;
-		for(Subject subject : subjectsToSchedule) {
+		for (Subject subject : subjectsToSchedule) {
 			priority = 0;
 			priority += subject.getApplicableSlots().size();
-			if(subject.isCompulsory()) {
+			if (subject.isCompulsory()) {
 				priority++;
 			}
 			subject.setPriority(priority);
@@ -87,13 +107,13 @@ public class App {
 		PrintWriter pw;
 		try {
 			String jarpath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-			String outputpath = Paths.get(jarpath).getParent().toString()+pathSeparator+outputFileName;
-			if(debugEnabled) {
+			String outputpath = Paths.get(jarpath).getParent().toString() + pathSeparator + outputFileName;
+			if (debugEnabled) {
 				System.out.println("\nWriting to file: " + outputpath);
 			}
 			pw = new PrintWriter(new File(Paths.get(outputpath).toString()));
 			StringBuilder sb = new StringBuilder();
-			for(Subject subject : subjectsScheduled) {
+			for (Subject subject : subjectsScheduled) {
 				sb.append(subject.getName());
 				sb.append(" ,");
 				sb.append(subject.getRoomAndTime().getTime());
@@ -101,8 +121,8 @@ public class App {
 				sb.append(subject.getRoomAndTime().getRoom());
 				sb.append("\n");
 			}
-	        pw.write(sb.toString());
-	        pw.close();
+			pw.write(sb.toString());
+			pw.close();
 		} catch (FileNotFoundException e) {
 			System.out.println(outputFileName + " is not found");
 			e.printStackTrace();
@@ -116,29 +136,54 @@ public class App {
 		}
 
 		Subject subjectToAssign = getSubjectToAssign();
+		if (debugEnabled) {
+			System.out.println("Attempting to schedule " + subjectToAssign);
+		}
 
 		Set<RoomAndTime> applicableRoomsAndTimes = subjectToAssign.getApplicableSlots();
-
+		Set<RoomAndTime> effectiveAvailableRoomsAndTimes = new HashSet<>();
 		for (RoomAndTime roomAndTime : applicableRoomsAndTimes) {
 			if (!availableRoomsAndTimes.contains(roomAndTime)) {
 				if (debugEnabled) {
-					System.out.println("\nRoomAndTime already taken: " + roomAndTime);
-					System.out.println("Available slots: " + availableRoomsAndTimes + "\n");
+					System.out
+							.println("RoomAndTime already taken: " + roomAndTime + ". Attempting next applicable slot");
 				}
 				continue;
+			}
+			if (subjectToAssign.isCompulsory()) {
+				effectiveAvailableRoomsAndTimes = new HashSet<>();
+				for (RoomAndTime scheduledSlot : assignedRoomsAndTimes) {
+					for (RoomAndTime rt : availableRoomsAndTimes) {
+						if (!rt.getTime().equals(scheduledSlot.getTime())) {
+							effectiveAvailableRoomsAndTimes.add(rt);
+						} else {
+							if (debugEnabled) {
+								System.out.println("Another subject is assigned at time " + rt.getTime());
+								System.out.println("Ignoring " + rt + " from available time slot " + " since "
+										+ subjectToAssign.getName() + " is compulsory");
+							}
+						}
+					}
+				}
+				if (effectiveAvailableRoomsAndTimes.isEmpty()) {
+					continue;
+				}
+			} else {
+				effectiveAvailableRoomsAndTimes.addAll(availableRoomsAndTimes);
 			}
 			if (forwardCheck(subjectToAssign, roomAndTime)) {
 				availableRoomsAndTimes.remove(roomAndTime);
 				assignedRoomsAndTimes.add(roomAndTime);
-				if(subjectToAssign.isCompulsory()) {
-					for(RoomAndTime slot : availableRoomsAndTimes) {
-						if(slot.getTime().equals(roomAndTime.getTime())) {
+				Set<RoomAndTime> temp = new HashSet<>();
+				temp.addAll(availableRoomsAndTimes);
+				if (subjectToAssign.isCompulsory()) {
+					for (RoomAndTime slot : temp) {
+						if (slot.getTime().equals(roomAndTime.getTime())) {
 							availableRoomsAndTimes.remove(slot);
 							assignedRoomsAndTimes.add(slot);
 						}
 					}
 				}
-				assignedRoomsAndTimes.add(roomAndTime);
 				subjectToAssign.setRoomAndTime(roomAndTime);
 				subjectsToSchedule.remove(subjectToAssign);
 				subjectsScheduled.add(subjectToAssign);
@@ -159,42 +204,64 @@ public class App {
 	}
 
 	private static void displayScheduledSubjects() {
-		for(Subject subject : subjectsScheduled) {
-			System.out.println(subject.getName() + " | " + subject.getRoomAndTime().getRoom() + " | " + subject.getRoomAndTime().getTime());
+		for (Subject subject : subjectsScheduled) {
+			System.out.println(subject.getName() + " | comuplsory: " + subject.isCompulsory() + " | "
+					+ subject.getRoomAndTime().getRoom() + " | " + subject.getRoomAndTime().getTime());
 		}
 		System.out.println();
 	}
 
 	private static boolean forwardCheck(Subject subjectToAssign, RoomAndTime roomAndTime) {
+//		if (subjectsToSchedule.size() == 1) {
+//			System.out.println("Forward check passed " + subjectToAssign.getName() + " " + roomAndTime);
+//			return true;
+//		}
 		Set<RoomAndTime> effectiveAvailableRoomsAndTimes = new HashSet<>();
-		effectiveAvailableRoomsAndTimes.addAll(availableRoomsAndTimes);
-		effectiveAvailableRoomsAndTimes.remove(roomAndTime);
-		
-		if(subjectToAssign.isCompulsory()) {
-			for(RoomAndTime slot : effectiveAvailableRoomsAndTimes) {
-				if(slot.getTime().equals(roomAndTime.getTime())) {
+
+		if (subjectToAssign.isCompulsory()) {
+			for (RoomAndTime slot : availableRoomsAndTimes) {
+				if (!slot.getTime().equals(roomAndTime.getTime())) {
+					effectiveAvailableRoomsAndTimes.add(slot);
+				}
+			}
+			for (RoomAndTime slot : assignedRoomsAndTimes) {
+				if (slot.getTime().equals(roomAndTime.getTime())) {
 					effectiveAvailableRoomsAndTimes.remove(slot);
 				}
 			}
+		} else {
+			effectiveAvailableRoomsAndTimes.addAll(availableRoomsAndTimes);
 		}
-		
+		if (effectiveAvailableRoomsAndTimes.isEmpty()) {
+			if (debugEnabled) {
+				System.out.println("Can't assign " + roomAndTime + " to " + subjectToAssign.getName()
+						+ " due to forward check constraint");
+			}
+			return false;
+		}
+
 		Set<Subject> subjectsToForwardCheck = new HashSet<>();
 		subjectsToForwardCheck.addAll(subjectsToSchedule);
 		subjectsToForwardCheck.remove(subjectToAssign);
 		for (Subject subject : subjectsToForwardCheck) {
 			if (Collections.disjoint(subject.getApplicableSlots(), effectiveAvailableRoomsAndTimes)) {
-				if(debugEnabled) {
-					System.out.println("Can't assign " + roomAndTime + " to " + subjectToAssign.getName() + " due to forward check constraint");
+				if (debugEnabled) {
+					System.out.println("Can't assign " + roomAndTime + " to " + subjectToAssign.getName()
+							+ " due to forward check constraint");
 				}
 				return false;
 			}
 		}
+		System.out.println("Forward check passed " + subjectToAssign.getName() + " " + roomAndTime);
 		return true;
 	}
 
 	private static void backtrack() {
-		if(subjectsScheduled.isEmpty()) {
+		if (subjectsScheduled.isEmpty()) {
 			System.out.println("Unable to find the solution, terminating the program");
+			System.out.println("Please ensure the problem is solvable");
+			System.out.println(
+					"If solvable, please consider filing an issue at https://github.com/KajanM/TimeTableScheduler");
 			System.exit(0);
 		}
 		Subject wrongAssignment = (Subject) subjectsScheduled.toArray()[subjectsScheduled.size() - 1];
@@ -203,13 +270,16 @@ public class App {
 		while (iterator.hasNext()) {
 			subject = iterator.next();
 			if (subject.equals(wrongAssignment)) {
+				if (debugEnabled) {
+					System.out.println("Removing " + subject.getName() + " from scheduled category");
+				}
 				subjectsScheduled.remove(subject);
 				subjectsToSchedule.add(subject);
 
 				availableRoomsAndTimes.add(subject.getRoomAndTime());
-				if(subject.isCompulsory()) {
-					for(RoomAndTime slot : assignedRoomsAndTimes) {
-						if(slot.getTime().equals(subject.getRoomAndTime().getTime())) {
+				if (subject.isCompulsory()) {
+					for (RoomAndTime slot : assignedRoomsAndTimes) {
+						if (slot.getTime().equals(subject.getRoomAndTime().getTime())) {
 							assignedRoomsAndTimes.remove(slot);
 							availableRoomsAndTimes.add(slot);
 						}
@@ -241,7 +311,7 @@ public class App {
 	private static Subject getSubjectToAssign() {
 		Subject maxPrioritySubject = (Subject) subjectsToSchedule.toArray()[0];
 		for (Subject subject : subjectsToSchedule) {
-			if(subject.getPriority() < maxPrioritySubject.getPriority()) {
+			if (subject.getPriority() < maxPrioritySubject.getPriority()) {
 				maxPrioritySubject = subject;
 			}
 		}
@@ -262,15 +332,14 @@ public class App {
 			String[] data;
 
 			String jarpath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-			String inputpath = Paths.get(jarpath).getParent().toString()+ pathSeparator +inputFileName;
-			if(debugEnabled) {
+			String inputpath = Paths.get(jarpath).getParent().toString() + pathSeparator + inputFileName;
+			if (debugEnabled) {
 				System.out.println("Reading from file: " + inputpath);
 			}
-			List<String> input = Files.readAllLines(Paths.get(inputpath),
-					StandardCharsets.ISO_8859_1);
-			
+			List<String> input = Files.readAllLines(Paths.get(inputpath), StandardCharsets.ISO_8859_1);
+
 			System.out.println("Input file contents");
-			for(String line : input) {
+			for (String line : input) {
 				System.out.println(line);
 			}
 
@@ -281,11 +350,11 @@ public class App {
 			input.remove(roomsLine);
 
 			for (String line : input) {
-				if(line.trim().startsWith("#")) {
-					//ignore comment
+				if (line.trim().startsWith("#")) {
+					// ignore comment
 					continue;
 				}
-				if(line.trim().isEmpty()) {
+				if (line.trim().isEmpty()) {
 					continue;
 				}
 				data = line.split(",");

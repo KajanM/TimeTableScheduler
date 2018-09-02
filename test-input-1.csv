@@ -1,7 +1,7 @@
-S1, c, M1, M2, M3
-S2, o, M1, M2, M3
-S3, c, M1, M2, M3
+S1, c, T1, M2, M3
+S2, o, M1, T2, M3
+S3, c, M1, M2, T3
 S4, o, M1, M2, M3
-S5, c, M1, M2, M3
+S5, o, M1, M2, M3
 S6, o, M1
 R1, R2
