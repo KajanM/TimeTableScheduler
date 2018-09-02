@@ -23,7 +23,7 @@ public class App {
 	private static Set<RoomAndTime> availableRoomsAndTimes;
 	private static Set<RoomAndTime> assignedRoomsAndTimes;
 
-	private static boolean debugEnabled = false;
+	private static boolean debugEnabled = true;
 	private static String pathSeparator;
 
 	public static void main(String[] args) {
@@ -73,7 +73,9 @@ public class App {
 			TestCases.onlyApplicableTimeIsAssigned(subjectsScheduled);
 		} catch (Exception e) {
 			System.out.println("Could not solve...");
-			e.printStackTrace();
+			if (debugEnabled) {
+				e.printStackTrace();
+			}
 			System.out.println("Remaining subjects to solve ");
 			if (debugEnabled) {
 				for (Subject subject : subjectsToSchedule) {
@@ -85,9 +87,7 @@ public class App {
 					System.out.println();
 				}
 			}
-			System.out.println("Please ensure the problem is solvable");
-			System.out.println(
-					"If solvable, please consider filing an issue at https://github.com/KajanM/TimeTableScheduler");
+			displayUnableToSolveMessage();
 		}
 	}
 
@@ -221,6 +221,9 @@ public class App {
 	}
 
 	private static void displayScheduledSubjects() {
+		if(subjectsScheduled.isEmpty()) {
+			System.out.println("No subjects are scheduled yet");
+		}
 		for (Subject subject : subjectsScheduled) {
 			System.out.println(subject.getName() + " | compulsory: " + subject.isCompulsory() + " | "
 					+ subject.getRoomAndTime().getRoom() + " | " + subject.getRoomAndTime().getTime());
@@ -272,13 +275,15 @@ public class App {
 
 	private static void backtrack() {
 		if (subjectsScheduled.isEmpty()) {
-			System.out.println("Unable to find the solution, terminating the program");
-			System.out.println("Please ensure the problem is solvable");
-			System.out.println(
-					"If solvable, please consider filing an issue at https://github.com/KajanM/TimeTableScheduler");
-			System.exit(0);
+			if (getSubjectToAssign() == null || getSubjectToAssign().getPriority() > 100) {
+				displayUnableToSolveMessage();
+			}
+			getSubjectToAssign().incrementPriorityByOne();
+			return;
 		}
 		Subject wrongAssignment = (Subject) subjectsScheduled.toArray()[subjectsScheduled.size() - 1];
+		
+		wrongAssignment.incrementPriorityByOne();
 		Iterator<Subject> iterator = subjectsScheduled.iterator();
 		Subject subject;
 		while (iterator.hasNext()) {
@@ -320,6 +325,16 @@ public class App {
 				break;
 			}
 		}
+	}
+
+	private static void displayUnableToSolveMessage() {
+		System.out.println("Unable to find the solution, terminating the program");
+		System.out.println("Partial assignment");
+		displayScheduledSubjects();
+		System.out.println("Please ensure the problem is solvable");
+		System.out.println(
+				"If solvable, please consider filing an issue at https://github.com/KajanM/TimeTableScheduler");
+		System.exit(0);
 	}
 
 	private static Subject getSubjectToAssign() {
