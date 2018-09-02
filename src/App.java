@@ -143,6 +143,10 @@ public class App {
 	}
 
 	private static void backtrack() {
+		if(subjectsAssigned.isEmpty()) {
+			System.out.println("Unable to find the solution, terminating the program");
+			System.exit(0);
+		}
 		Subject wrongAssignment = (Subject) subjectsAssigned.toArray()[subjectsAssigned.size() - 1];
 		Iterator<Subject> iterator = subjectsAssigned.iterator();
 		Subject subject;
