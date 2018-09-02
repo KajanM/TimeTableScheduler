@@ -5,12 +5,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class App {
@@ -20,8 +18,6 @@ public class App {
 	private static Set<Subject> subjectsAssigned;
 	private static Set<RoomAndTime> availableRoomsAndTimes;
 	private static Set<RoomAndTime> assignedRoomsAndTimes;
-
-	private static Map<Subject, Set<RoomAndTime>> checkedSlotsPerSubject;
 
 	private static boolean debugEnabled = true;
 
@@ -89,13 +85,6 @@ public class App {
 					System.out.println("Successfully scheduled " + subjectToAssign);
 				}
 				break;
-			}
-			if (checkedSlotsPerSubject.containsKey(subjectToAssign)) {
-				checkedSlotsPerSubject.get(subjectToAssign).add(roomAndTime);
-			} else {
-				Set<RoomAndTime> slots = new HashSet<>();
-				slots.add(roomAndTime);
-				checkedSlotsPerSubject.put(subjectToAssign, slots);
 			}
 		}
 
@@ -178,7 +167,6 @@ public class App {
 		availableRoomsAndTimes = new HashSet<>();
 		parseCSVData();
 		subjectsAssigned = new LinkedHashSet<>();
-		checkedSlotsPerSubject = new HashMap<>();
 		assignedRoomsAndTimes = new HashSet<>();
 	}
 
