@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -26,7 +27,13 @@ public class App {
 		initialize();
 		parseCSVData(inputFileName);
 		assignPriority();
+		long startTime = System.nanoTime();
+		System.out.println("Recursive scheduling job started at " + new Date() + "\n");
 		assignTimeAndRoom();
+		long endTime = System.nanoTime();
+		long duration = (endTime - startTime)/1000;
+		System.out.println("Scheduling process took " + duration + " micro seconds");
+		System.out.println("Writing result to output file");
 		outputResult();
 	}
 
@@ -35,6 +42,7 @@ public class App {
 			System.out.println("Initial subject list is empty. Existing");
 			return;
 		}
+		System.out.println("Assigning priority to subjects based on `Minimum Remaining Value` and `Degree` heuristics.\n");
 		int priority;
 		for(Subject subject : subjectsToSchedule) {
 			priority = 0;
@@ -59,6 +67,7 @@ public class App {
 
 	private static void assignTimeAndRoom() {
 		if (subjectsToSchedule.isEmpty()) {
+			System.out.println("Scheduling job completed at " + new Date());
 			return;
 		}
 
@@ -112,11 +121,12 @@ public class App {
 		System.out.println();
 	}
 
-	private static void displaySubjectsToAssign() {
-		System.out.println("Subjects to schedule\n==========");
+	private static void displaySubjectsToSchedule() {
+		System.out.println("Subjects to schedule");
 		for(Subject subject : subjectsToSchedule) {
 			System.out.println(subject);
 		}
+		System.out.println();
 	}
 
 	private static boolean forwardCheck(Subject subjectToAssign, RoomAndTime roomAndTime) {
@@ -250,8 +260,8 @@ public class App {
 
 			if (debugEnabled) {
 				System.out.println("parsing " + inputFileName + " finished");
-				displaySubjectsToAssign();
-				System.out.println("Available rooms\n==========\n" + rooms);
+				displaySubjectsToSchedule();
+				System.out.println("Available rooms" + rooms);
 				System.out.println();
 			}
 
