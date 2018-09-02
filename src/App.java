@@ -1,6 +1,8 @@
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -33,8 +35,8 @@ public class App {
 		long endTime = System.nanoTime();
 		long duration = (endTime - startTime)/1000;
 		System.out.println("Scheduling process took " + duration + " micro seconds");
-		System.out.println("Writing result to output file");
-		outputResult();
+		String outputFileName = args[1];
+		writeResultToCsv(outputFileName);
 	}
 
 	private static void assignPriority() {
@@ -54,14 +56,25 @@ public class App {
 		}
 	}
 
-	private static void outputResult() {
-		if (!subjectsToSchedule.isEmpty()) {
-			System.out.println("Invalid logic");
-			return;
-		}
-
-		for (Subject subject : subjectsScheduled) {
-			System.out.println(subject);
+	private static void writeResultToCsv(String outputFileName) {
+		PrintWriter pw;
+		try {
+			pw = new PrintWriter(new File(Paths.get(App.class.getResource(outputFileName).getPath()).toString()));
+			StringBuilder sb = new StringBuilder();
+			for(Subject subject : subjectsScheduled) {
+				sb.append(subject.getName());
+				sb.append(" ,");
+				sb.append(subject.getRoomAndTime().getTime());
+				sb.append(" ,");
+				sb.append(subject.getRoomAndTime().getRoom());
+				sb.append("\n");
+			}
+	        pw.write(sb.toString());
+	        pw.close();
+	        System.out.println("Wrote result to " + outputFileName);
+		} catch (FileNotFoundException e) {
+			System.out.println(outputFileName + " is not found");
+			e.printStackTrace();
 		}
 	}
 
