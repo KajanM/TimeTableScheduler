@@ -63,6 +63,7 @@ public class App {
 			return;
 		}
 		writeResultToCsv(outputFileName);
+		System.out.println("\nProcess completed, existing program.");
 	}
 
 	private static void assignPriority() {
@@ -87,6 +88,9 @@ public class App {
 		try {
 			String jarpath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 			String outputpath = Paths.get(jarpath).getParent().toString()+pathSeparator+outputFileName;
+			if(debugEnabled) {
+				System.out.println("\nWriting to file: " + outputpath);
+			}
 			pw = new PrintWriter(new File(Paths.get(outputpath).toString()));
 			StringBuilder sb = new StringBuilder();
 			for(Subject subject : subjectsScheduled) {
@@ -99,7 +103,6 @@ public class App {
 			}
 	        pw.write(sb.toString());
 	        pw.close();
-	        System.out.println("Wrote result to " + outputFileName);
 		} catch (FileNotFoundException e) {
 			System.out.println(outputFileName + " is not found");
 			e.printStackTrace();
@@ -260,7 +263,9 @@ public class App {
 
 			String jarpath = App.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 			String inputpath = Paths.get(jarpath).getParent().toString()+ pathSeparator +inputFileName;
-			System.out.println(inputpath);
+			if(debugEnabled) {
+				System.out.println("Reading from file: " + inputpath);
+			}
 			List<String> input = Files.readAllLines(Paths.get(inputpath),
 					StandardCharsets.ISO_8859_1);
 			
