@@ -150,14 +150,6 @@ public class App {
 		System.out.println();
 	}
 
-	private static void displaySubjectsToSchedule() {
-		System.out.println("Subjects to schedule");
-		for(Subject subject : subjectsToSchedule) {
-			System.out.println(subject);
-		}
-		System.out.println();
-	}
-
 	private static boolean forwardCheck(Subject subjectToAssign, RoomAndTime roomAndTime) {
 		Set<RoomAndTime> effectiveAvailableRoomsAndTimes = new HashSet<>();
 		effectiveAvailableRoomsAndTimes.addAll(availableRoomsAndTimes);
@@ -295,13 +287,7 @@ public class App {
 				subjectsToSchedule.add(subject);
 			}
 
-			if (debugEnabled) {
-				System.out.println("parsing " + inputFileName + " finished");
-				displaySubjectsToSchedule();
-				System.out.println("Available rooms" + rooms);
-				System.out.println();
-			}
-
+			System.out.println("\nParsing input csv file completed\n");
 		} catch (FileNotFoundException e) {
 			System.out.println("Error: no such input file");
 			e.printStackTrace();
