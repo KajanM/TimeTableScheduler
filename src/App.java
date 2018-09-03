@@ -40,12 +40,12 @@ public class App {
 				pathSeparator = "/";
 				System.out.println("Found Linux OS, setting path separator to " + pathSeparator);
 			}
-			String inputFileName = args[0];
 
-			if (inputFileName.trim().isEmpty()) {
+			if (args[0].trim().isEmpty()) {
 				System.out.println("Invalid input file name");
 				return;
 			}
+			String inputFileName = args[0].trim() + ".csv";
 
 			initialize();
 			parseCSVData(inputFileName);
@@ -56,11 +56,12 @@ public class App {
 			long endTime = System.currentTimeMillis();
 			long duration = (endTime - startTime);
 			System.out.println("Scheduling process took " + duration + " milli seconds");
-			String outputFileName = args[1];
-			if (outputFileName.trim().isEmpty()) {
+			
+			if (args[1].trim().isEmpty()) {
 				System.out.println("Invalid output file name");
 				return;
 			}
+			String outputFileName = args[1].trim() + ".csv";
 			if (!debugEnabled) {
 				System.out.println("\nResults");
 				displayScheduledSubjects();
