@@ -1,0 +1,7 @@
+S1, o, M1
+S2, o, M1
+S3, c, T1, M2
+S4, o, M2, M1, T2
+S5, o, T2
+S6, o, T2
+R1, R2
